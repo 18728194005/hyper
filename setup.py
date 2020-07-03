@@ -38,15 +38,13 @@ VERSION = "1.0.0"
 
 
 def replace_version_py(version):
-    content = """# -*- coding: utf-8 -*-
-'''hyper-qta version
-'''
-VERSION = '%(version)s'
-
-"""
-    version_py = os.path.join(BASE_DIR, 'hyper', 'version.py')
+    version_py = os.path.join(BASE_DIR, 'hyper', '__init__.py')
+    new_content = ""
+    with open(version_py, 'r') as fd:
+        content = fd.read()
+        new_content = re.sub(r'[\'"](\d+\.\d+.\d+)[\'"]', "'{}'".format(version), content)
     with open(version_py, 'w') as fd:
-        fd.write(content % {'version': version})
+        fd.write(new_content)
 
 
 def generate_version():
