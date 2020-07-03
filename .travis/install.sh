@@ -8,6 +8,6 @@ if [[ "$HYPER_FAST_PARSE" = true ]]; then
 fi
 
 pip install -U setuptools
-pip install .
+pip install -r requirements.txt
 pip install -r test_requirements.txt
 pip install flake8
