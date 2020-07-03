@@ -27,40 +27,47 @@ class PyTest(TestCommand):
         sys.exit(errno)
 
 
-# Get the version
-version_regex = r'__version__ = ["\']([^"\']*)["\']'
-with open('hyper/__init__.py', 'r') as f:
-    text = f.read()
-    match = re.search(version_regex, text)
-
-    if match:
-        version = match.group(1)
-    else:
-        raise RuntimeError("No version number found!")
-
-# Stealing this from Kenneth Reitz
-if sys.argv[-1] == 'publish':
-    os.system('python setup.py sdist upload')
-    sys.exit()
-
-
 packages = [
     'hyper',
     'hyper.http20',
     'hyper.common',
     'hyper.http11',
 ]
+BASE_DIR = os.path.realpath(os.path.dirname(__file__))
+VERSION = "1.0.0"
+
+
+def replace_version_py(version):
+    content = """# -*- coding: utf-8 -*-
+'''hyper-qta version
+'''
+VERSION = '%(version)s'
+"""
+    version_py = os.path.join(BASE_DIR, 'hyper', 'version.py')
+    with open(version_py, 'w') as fd:
+        fd.write(content % {'version': version})
+
+
+def generate_version():
+    version = VERSION
+    if os.path.isfile(os.path.join(BASE_DIR, "version.txt")):
+        with open("version.txt", "r") as fd:
+            content = fd.read().strip()
+            if content:
+                version = content
+    replace_version_py(version)
+    return version
+
 
 setup(
-    name='hyper',
-    version=version,
+    name='hyper-qta',
+    version=generate_version(),
     description='HTTP/2 Client for Python',
     long_description=open('README.rst').read() + '\n\n' + open('HISTORY.rst').read(),
-    author='Cory Benfield',
-    author_email='cory@lukasa.co.uk',
+    author='qta',
     url='http://hyper.rtfd.org',
     packages=packages,
-    package_data={'': ['LICENSE', 'README.rst', 'CONTRIBUTORS.rst', 'HISTORY.rst', 'NOTICES']},
+    package_data={'': ['LICENSE', 'README.rst', 'CONTRIBUTORS.rst', 'HISTORY.rst', 'NOTICES', '*.txt', '*.TXT']},
     package_dir={'hyper': 'hyper'},
     include_package_data=True,
     license='MIT License',
@@ -74,6 +81,7 @@ setup(
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: Implementation :: CPython',
     ],
     install_requires=[

@@ -24,3 +24,19 @@ before_script: "flake8 hyper test"
 
 script:
   - ".travis/run.sh"
+
+before_deploy:
+  - echo $TRAVIS_TAG > version.txt
+
+deploy:
+  skip_cleanup: true
+  skip_existing: true
+  provider: pypi
+  user: qta
+  password:
+    secure: CNDs6Lg7bUjr18sNNehF0+ktKRuMkMCJ4E/jZT31V2hIxEHillg1QqLVOTXasn+/FJ5BO1h60tcQZGa1rOSsINR33UIRQt8iHTp+nelrdaDdnwXyWkexSL6+vUEwZg6kXbYCFFw1lZWLhsxc/1TcYSfpU/r8ThKOSoD7uGNg/jMMCbPTgC/rJPnjCUeubbfvAlFMaPP8y7WNkHXtQvqX3rLuETKBjH2pr6+pHf/1+fAmiC/XQSSnoFH19rI0fkis+Ja449nLkwFu/OL069dds2jWfeq56Ro53KKokFH1hbq9k+fS9QRwQ+jaK/NW+V6bPIxWj7/WYxn//fSdVRNyp02vvZHHdSdFlI8rnoMrTzOyjbwczx02IaG2J1St+kreOfvbymITFWOROLHqwl8oJH8fFhJCF3h5JmCSmfaokoUsXWDaSrmMxd3yCs0r1WMExjqDP4M8m/+PiGE3s/IvUzXjA0riZ9e67hoIOGYxgf/7quPgoZ+eG7pBXgpQ3Mlw1mdDm+/+CtEMgKM8NgKulQXb2SFmJ8EGI0o9oV9lhGZg2030V/IsXWCcvFkhf5sPAcuFZ43HfSVCiyAhUzIs+Sf08lQFr2RosuC3dqob4otPRQq0uGIPljANx3isOH/R5Wy9F5V9SQ6pKtDMs0RhbGDLdiFf05irwv0eE8IBCAg=
+  distributions: "sdist"
+  on:
+    tags: true
+    all_branches: true
+    condition: $TRAVIS_TAG =~ [0-9]+\.[0-9]+\.[0-9]+
