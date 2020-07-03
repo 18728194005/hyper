@@ -6,6 +6,7 @@ hyper/tls
 Contains the TLS/SSL logic for use in hyper.
 """
 import os.path as path
+import six
 from .common.exceptions import MissingCertFile
 from .compat import ignore_missing, ssl
 
@@ -121,11 +122,7 @@ def init_context(cert_path=None, cert=None, cert_password=None):
     context.options |= ssl.OP_NO_COMPRESSION
 
     if cert is not None:
-        try:
-            basestring
-        except NameError:
-            basestring = (str, bytes)
-        if not isinstance(cert, basestring):
+        if not isinstance(cert, six.string_types):
             context.load_cert_chain(cert[0], cert[1], cert_password)
         else:
             context.load_cert_chain(cert, password=cert_password)

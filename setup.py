@@ -42,6 +42,7 @@ def replace_version_py(version):
 '''hyper-qta version
 '''
 VERSION = '%(version)s'
+
 """
     version_py = os.path.join(BASE_DIR, 'hyper', 'version.py')
     with open(version_py, 'w') as fd:
@@ -59,6 +60,17 @@ def generate_version():
     return version
 
 
+def parse_requirements():
+    reqs = []
+    if os.path.isfile(os.path.join(BASE_DIR, "requirements.txt")):
+        with open(os.path.join(BASE_DIR, "requirements.txt"), 'r') as fd:
+            for line in fd.readlines():
+                line = line.strip()
+                if line:
+                    reqs.append(line)
+    return reqs
+
+
 setup(
     name='hyper-qta',
     version=generate_version(),
@@ -68,6 +80,7 @@ setup(
     url='http://hyper.rtfd.org',
     packages=packages,
     package_data={'': ['LICENSE', 'README.rst', 'CONTRIBUTORS.rst', 'HISTORY.rst', 'NOTICES', '*.txt', '*.TXT']},
+    data_files=[(".", ["requirements.txt", "version.txt"])],
     package_dir={'hyper': 'hyper'},
     include_package_data=True,
     license='MIT License',
@@ -84,9 +97,7 @@ setup(
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: Implementation :: CPython',
     ],
-    install_requires=[
-        'h2>=2.4,<3.0,!=2.5.0', 'hyperframe>=3.2,<4.0', 'rfc3986>=1.1.0,<2.0', 'brotlipy>=0.7.0,<1.0'
-    ],
+    install_requires=parse_requirements(),
     tests_require=['pytest', 'requests', 'mock'],
     cmdclass={'test': PyTest},
     entry_points={

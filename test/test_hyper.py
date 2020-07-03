@@ -1660,8 +1660,8 @@ class DummySocket(object):
 
     sendall = send
 
-    def recv(self, l):
-        data = self._buffer.read(l)
+    def recv(self, data_size):
+        data = self._buffer.read(data_size)
         self._read_counter += len(data)
         return memoryview(data)
 
