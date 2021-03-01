@@ -111,6 +111,12 @@ class HTTP20Connection(object):
         else:
             self.host, self.port = host, port
 
+        server_hostname = kwargs.pop('server_hostname', None)
+        if server_hostname:
+            self.server_hostname = server_hostname
+        else:
+            self.server_hostname = self.host
+
         if secure is not None:
             self.secure = secure
         elif self.port == 443:
@@ -374,7 +380,8 @@ class HTTP20Connection(object):
                                                 timeout=connect_timeout)
 
             if self.secure:
-                sock, proto = wrap_socket(sock, self.host, self.ssl_context,
+                sock, proto = wrap_socket(sock, self.server_hostname,
+                                          self.ssl_context,
                                           force_proto=self.force_proto)
             else:
                 proto = H2C_PROTOCOL

@@ -1530,6 +1530,71 @@ class TestRequestsAdapter(SocketLevelTest):
 
         self.tear_down()
 
+    def test_adapter_sni(self, monkeypatch, frame_buffer):
+        self.set_up()
+
+        # We need to patch the ssl_wrap_socket method to ensure that we
+        # forcefully upgrade.
+        old_wrap_socket = hyper.http11.connection.wrap_socket
+
+        def wrap(*args):
+            sock, _ = old_wrap_socket(*args)
+            return sock, 'h2'
+
+        monkeypatch.setattr(hyper.http11.connection, 'wrap_socket', wrap)
+
+        recv_event = threading.Event()
+
+        def socket_handler(listener):
+            sock = listener.accept()[0]
+
+            # Do the handshake: conn header, settings, send settings, recv ack.
+            frame_buffer.add_data(receive_preamble(sock))
+
+            # Now expect some data. One headers frame.
+            req_wait = True
+            while req_wait:
+                frame_buffer.add_data(sock.recv(65535))
+                with reusable_frame_buffer(frame_buffer) as fr:
+                    for f in fr:
+                        if isinstance(f, HeadersFrame):
+                            req_wait = False
+
+            # Respond!
+            h = HeadersFrame(1)
+            h.data = self.get_encoder().encode(
+                [
+                    (':status', 200),
+                    ('content-type', 'not/real'),
+                    ('content-length', 20),
+                ]
+            )
+            h.flags.add('END_HEADERS')
+            sock.send(h.serialize())
+            d = DataFrame(1)
+            d.data = b'1234567890' * 2
+            d.flags.add('END_STREAM')
+            sock.send(d.serialize())
+
+            # keep the socket open for clean shutdown
+            recv_event.wait(5)
+            sock.close()
+
+        self._start_server(socket_handler)
+
+        s = requests.Session()
+        s.mount('https://%s' % self.host, HTTP20Adapter())
+        r = s.get('https://%s:%s/some/path' % (self.host, self.port),
+                  headers={":authority": self.host})
+
+        # Assert about the received values.
+        assert r.status_code == 200
+        assert r.headers['Content-Type'] == 'not/real'
+        assert r.content == b'1234567890' * 2
+
+        recv_event.set()
+        self.tear_down()
+
     def test_adapter_uses_proxy_auth_for_secure(self):
         self.set_up(secure=SocketSecuritySetting.SECURE_NO_AUTO_WRAP,
                     proxy=True)
