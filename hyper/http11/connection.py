@@ -107,6 +107,12 @@ class HTTP11Connection(object):
         else:
             self.host, self.port = host, port
 
+        server_hostname = kwargs.pop('server_hostname', None)
+        if server_hostname:
+            self.server_hostname = server_hostname
+        else:
+            self.server_hostname = self.host
+
         # Record whether we plan to secure the request. In future this should
         # be extended to a security profile, but a bool will do for now.
         # TODO: Actually do something with this!
@@ -191,7 +197,8 @@ class HTTP11Connection(object):
             proto = None
 
             if self.secure:
-                sock, proto = wrap_socket(sock, self.host, self.ssl_context)
+                sock, proto = wrap_socket(sock, self.server_hostname,
+                                          self.ssl_context)
 
             log.debug("Selected protocol: %s", proto)
             sock = BufferedSocket(sock, self.network_buffer_size)
